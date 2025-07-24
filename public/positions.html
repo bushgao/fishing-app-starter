@@ -1,0 +1,90 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>分配钓位（手动填写）</title>
+</head>
+<body>
+  <!-- 登录校验 & fetchWithAuth -->
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('请先登录');
+      window.location.href = 'index.html';
+    }
+    async function fetchWithAuth(url, options = {}) {
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = `Bearer ${token}`;
+      return fetch(url, options);
+    }
+  </script>
+
+  <h1>分配钓位（手动填写）</h1>
+  <input id="sessionName" placeholder="场次名称" />
+  <button id="createSessionBtn">创建场次</button>
+  <select id="sessionSelect"><option>--选择场次--</option></select>
+
+  <h2>手动填写钓位</h2>
+  钓位号：<input id="spotNumber" /><br/>
+  钓友ID：<input id="anglerId" /><br/>
+  <button id="assignBtn">分配钓位</button>
+
+  <h2>当前分配结果</h2>
+  <ul id="resultList"></ul>
+
+  <script>
+    async function loadSessions() {
+      const res = await fetchWithAuth('/api/positions/sessions', { method: 'GET' });
+      const list = await res.json();
+      const sel = document.getElementById('sessionSelect');
+      sel.innerHTML = '<option>--选择场次--</option>';
+      list.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id; opt.text = s.name;
+        sel.appendChild(opt);
+      });
+    }
+    loadSessions();
+
+    document.getElementById('createSessionBtn').onclick = async () => {
+      const name = document.getElementById('sessionName').value;
+      const res = await fetchWithAuth('/api/positions/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const { sessionId } = await res.json();
+      alert(`新场次ID: ${sessionId}`);
+      loadSessions();
+    };
+
+    document.getElementById('assignBtn').onclick = async () => {
+      const sessionId = document.getElementById('sessionSelect').value;
+      const spot_number = Number(document.getElementById('spotNumber').value);
+      const angler_id = Number(document.getElementById('anglerId').value);
+      const res = await fetchWithAuth(`/api/positions/sessions/${sessionId}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spot_number, angler_id })
+      });
+      const data = await res.json();
+      if (data.success) alert('分配成功');
+      else alert('分配失败：' + (data.error || '未知'));
+      loadResults();
+    };
+
+    async function loadResults() {
+      const sessionId = document.getElementById('sessionSelect').value;
+      const res = await fetchWithAuth(`/api/positions/sessions/${sessionId}/positions`, { method: 'GET' });
+      const rows = await res.json();
+      const ul = document.getElementById('resultList');
+      ul.innerHTML = '';
+      rows.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `钓位 ${r.spot_number}: ${r.name} (${r.phone})`;
+        ul.appendChild(li);
+      });
+    }
+    document.getElementById('sessionSelect').addEventListener('change', loadResults);
+  </script>
+</body>
+</html>

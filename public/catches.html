@@ -1,0 +1,33 @@
+<html>
+<head><meta charset="UTF-8"/><title>中鱼登记</title></head>
+<body>
+<script>
+  const token=localStorage.getItem('token'); if(!token){alert('请先登录');location='index.html';}
+  async function fetchWithAuth(u,o={}){o.headers=o.headers||{};o.headers['Authorization']=`Bearer ${token}`;return fetch(u,o);}
+</script>
+<h1>中鱼登记</h1>
+<select id="sessionSelect"><option>--选择场次--</option></select>
+<button id="loadRec">加载记录</button><br/>
+钓友ID:<input id="anglerId" type="number"/><br/>
+钓位号:<input id="spotNumber" type="number"/><br/>
+鱼次:<input id="fishNumber" type="number"/><br/>
+重量(斤):<input id="weight" type="number"/><br/>
+累计序号:<input id="overallCount" type="number"/><br/>
+<button id="regBtn">提交登记</button>
+<h2>记录列表</h2><ul id="list"></ul>
+<script>
+  async function loadSessions(){const r=await fetchWithAuth('/api/positions/sessions');const s=await r.json();const sel=document.getElementById('sessionSelect');sel.innerHTML='<option>--选择场次--</option>';s.forEach(x=>sel.add(new Option(x.name,x.id)));}
+  loadSessions();
+  document.getElementById('regBtn').onclick=async()=>{
+    const sid=+document.getElementById('sessionSelect').value;
+    const payload={session_id:sid,angler_id:+document.getElementById('anglerId').value,spot_number:+document.getElementById('spotNumber').value,fish_number:+document.getElementById('fishNumber').value,weight:+document.getElementById('weight').value,overall_count:+document.getElementById('overallCount').value};
+    const r=await fetchWithAuth('/api/catches/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await r.json(); if(d.catchId){alert('登记成功');document.getElementById('loadRec').click();}else alert('失败');
+  };
+  document.getElementById('loadRec').onclick=async()=>{
+    const sid=+document.getElementById('sessionSelect').value;
+    const r=await fetchWithAuth(`/api/catches/session/${sid}`);const arr=await r.json();const ul=document.getElementById('list');ul.innerHTML='';arr.forEach(i=>ul.add(new Option(`#${i.overall_count} ${i.name} 重${i.weight}`)));
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>回鱼结算</title>
+</head>
+<body>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) { alert('请先登录'); location.href='index.html'; }
+    async function fetchWithAuth(url, opts={}) {
+      opts.headers = opts.headers||{};
+      opts.headers['Authorization'] = `Bearer ${token}`;
+      return fetch(url, opts);
+    }
+  </script>
+
+  <h1>回鱼结算</h1>
+
+  <label>选择场次：
+    <select id="sessionSelect"><option value="">--请选择--</option></select>
+  </label>
+  <br/><br/>
+
+  <label>选择中鱼记录：
+    <select id="catchSelect"><option value="">--请选择--</option></select>
+  </label>
+  <button id="loadRecords">加载记录</button>
+  <br/><br/>
+
+  <button id="settleBtn">进行结算</button>
+  <ul id="result"></ul>
+
+  <script>
+    // 加载所有场次
+    async function loadSessions() {
+      const res = await fetchWithAuth('/api/positions/sessions');
+      const sessions = await res.json();
+      const sel = document.getElementById('sessionSelect');
+      sel.innerHTML = '<option value="">--请选择--</option>';
+      sessions.forEach(s => {
+        sel.add(new Option(`${s.name} (ID:${s.id})`, s.id));
+      });
+    }
+    loadSessions();
+
+    // 根据场次加载中鱼记录
+    document.getElementById('loadRecords').onclick = async () => {
+      const sid = document.getElementById('sessionSelect').value;
+      if (!sid) return alert('请选择场次');
+      const res = await fetchWithAuth(`/api/catches/session/${sid}`);
+      const catches = await res.json();
+      const sel = document.getElementById('catchSelect');
+      sel.innerHTML = '<option value="">--请选择--</option>';
+      catches.forEach(c => {
+        sel.add(new Option(
+          `#${c.overall_count} ${c.name} 钓位${c.spot_number} 重${c.weight}斤`,
+          c.id
+        ));
+      });
+    };
+
+    // 进行结算
+    document.getElementById('settleBtn').onclick = async () => {
+      const cid = document.getElementById('catchSelect').value;
+      if (!cid) return alert('请选择中鱼记录');
+      const res = await fetchWithAuth(`/api/billing/settle/${cid}`, { method: 'POST' });
+      const b = await res.json();
+      if (b.billingId) {
+        document.getElementById('result').innerHTML =
+          `<li>净重：${b.net_weight} 斤，费用：¥${b.fee}</li>`;
+      } else {
+        alert('结算失败');
+      }
+    };
+  </script>
+</body>
+</html>

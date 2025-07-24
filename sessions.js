@@ -1,3 +1,26 @@
+/**
+ * @file routes/sessions.js
+ * @description 比赛场次（Session）管理
+ *
+ * @route GET    /api/sessions             获取所有场次
+ * @route GET    /api/sessions/:id         获取指定场次
+ * @route POST   /api/sessions             新建场次（包括钓友+钓位）
+ *   body: { name, start_time, end_time, anglers: [id,…], positions: [id,…] }
+ * @route PUT    /api/sessions/:id         更新场次信息
+ * @route DELETE /api/sessions/:id         删除场次
+ */
+const express = require('express');
+const router = express.Router();
+const db = require('../db');
+
+router.get('/', /* … */);
+router.get('/:id', /* … */);
+router.post('/', /* 插入 sessions，并批量插入 session_anglers, session_positions */);
+router.put('/:id', /* … */);
+router.delete('/:id', /* … */);
+
+module.exports = router;
+
 // sessions.js
 const express = require('express');
 const router = express.Router();

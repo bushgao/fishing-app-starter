@@ -1,3 +1,21 @@
+/**
+ * @file routes/auth.js
+ * @description 钓场管理人员认证接口
+ *
+ * @route POST /api/login
+ *   登录，返回 JWT token
+ *   body: { username: string, password: string }
+ */
+const express = require('express');
+const router = express.Router();
+const auth = require('../auth');
+
+router.post('/login', async (req, res, next) => {
+  // Copilot 会帮你补全校验 username/password 并调用 auth.generateToken()
+});
+
+module.exports = router;
+
 const jwt = require('jsonwebtoken');
 const SECRET = 'your_secret_key';
 

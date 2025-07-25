@@ -40,16 +40,17 @@ function init() {
       overall_count INTEGER,
       caught_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-    db.run(`CREATE TABLE IF NOT EXISTS billing (
-  });
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-      catch_id INTEGER REFERENCES catches(id),
-      net_weight REAL,
-      fee REAL,
-      settled_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-}
-
+    db.run(`
+      CREATE TABLE IF NOT EXISTS billing (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        catch_id INTEGER REFERENCES catches(id),
+        net_weight REAL,
+        fee REAL,
+        settled_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  });  // 结束 serialize 回调
+} 
 function all(sql, params, callback) {
   db.all(sql, params, callback);
 }

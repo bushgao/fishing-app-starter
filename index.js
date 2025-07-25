@@ -29,4 +29,6 @@ app.use(express.static('public'));
 // 初始化 DB 并启动服务
 db.init();
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);

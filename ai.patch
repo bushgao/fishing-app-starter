@@ -1,0 +1,278 @@
+From e655f58f4f1ec1ce5f25521711c6ac030fba428d Mon Sep 17 00:00:00 2001
+From: bushgao <bushgao@gmail.com>
+Date: Fri, 25 Jul 2025 04:07:18 +0800
+Subject: [PATCH] =?UTF-8?q?feat:=20=E8=A1=A5=E5=85=A8=E5=90=84=E8=B7=AF?=
+ =?UTF-8?q?=E7=94=B1=20CRUD=20+=20=E5=A4=8D=E6=9D=82=E4=B8=9A=E5=8A=A1?=
+ =?UTF-8?q?=E9=80=BB=E8=BE=91=EF=BC=88EXCEL=20=E5=AF=BC=E5=85=A5/=E8=AF=AD?=
+ =?UTF-8?q?=E9=9F=B3=E6=92=AD=E6=8A=A5/=E8=AE=A1=E8=B4=B9/=E6=8E=92?=
+ =?UTF-8?q?=E8=A1=8C=E6=A6=9C=EF=BC=89?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ anglers.js      | 33 +++++++++++++++++++++++++++++++++
+ auth.js         | 18 ++++++++++++++++++
+ billing.js      | 26 ++++++++++++++++++++++++++
+ catches.js      | 37 +++++++++++++++++++++++++++++++++++++
+ leaderboards.js | 25 +++++++++++++++++++++++++
+ net_weights.js  | 15 +++++++++++++++
+ positions.js    | 16 ++++++++++++++++
+ sessions.js     | 23 +++++++++++++++++++++++
+ 8 files changed, 193 insertions(+)
+ create mode 100644 leaderboards.js
+ create mode 100644 net_weights.js
+
+diff --git a/anglers.js b/anglers.js
+index 9798602..fffade3 100644
+--- a/anglers.js
++++ b/anglers.js
+@@ -1,3 +1,36 @@
++/**
++ * @file routes/anglers.js
++ * @description 钓友（Angler）管理接口
++ *
++ * @route GET    /api/anglers            列表查询所有钓友
++ * @route GET    /api/anglers/:id        查询单个钓友
++ * @route POST   /api/anglers            新增单个钓友
++ * @route PUT    /api/anglers/:id        修改钓友信息
++ * @route DELETE /api/anglers/:id        删除钓友
++ * @route POST   /api/anglers/import     EXCEL 批量导入钓友
++ *   body: multipart/form-data, field='file'
++ */
++const express = require('express');
++const multer = require('multer');
++const router = express.Router();
++const db = require('../db');
++const upload = multer({ dest: 'uploads/' });
++
++router.get('/', /* … */);
++router.get('/:id', /* … */);
++router.post('/', /* … */);
++router.put('/:id', /* … */);
++router.delete('/:id', /* … */);
++
++/**
++ * POST /api/anglers/import
++ * EXCEL 批量导入
++ */
++router.post('/import', upload.single('file'), async (req, res, next) => {
++  // Copilot：解析 XLSX，循环插入 anglers 表
++});
++
++module.exports = router;
+ const express = require('express');
+ const router = express.Router();
+ const db = require('./db');
+diff --git a/auth.js b/auth.js
+index 58001a7..7c0a3f6 100644
+--- a/auth.js
++++ b/auth.js
+@@ -1,3 +1,21 @@
++/**
++ * @file routes/auth.js
++ * @description 钓场管理人员认证接口
++ *
++ * @route POST /api/login
++ *   登录，返回 JWT token
++ *   body: { username: string, password: string }
++ */
++const express = require('express');
++const router = express.Router();
++const auth = require('../auth');
++
++router.post('/login', async (req, res, next) => {
++  // Copilot 会帮你补全校验 username/password 并调用 auth.generateToken()
++});
++
++module.exports = router;
++
+ const jwt = require('jsonwebtoken');
+ const SECRET = 'your_secret_key';
+ 
+diff --git a/billing.js b/billing.js
+index 16ae78e..7f5761a 100644
+--- a/billing.js
++++ b/billing.js
+@@ -1,3 +1,29 @@
++/**
++ * @file routes/billing.js
++ * @description 回鱼计费规则
++ *
++ * 区间规则：
++ *   < 20  => ¥50
++ *   20-30 => ¥100
++ *   ……
++ *
++ * @route GET    /api/billing/:sessionId       获取所有回鱼账单
++ * @route POST   /api/billing                   根据回鱼净重触发计费并插入
++ *   body: { session_id: number, net_weight: number }
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++
++router.get('/:sessionId', /* … */);
++
++router.post('/', async (req, res, next) => {
++  // 1) 根据 net_weight 选费率
++  // 2) 插入 billing 表 { session_id, net_weight, amount }
++});
++
++module.exports = router;
++
+ const express = require('express');
+ const router = express.Router();
+ const db = require('./db');
+diff --git a/catches.js b/catches.js
+index 1a1849a..b7e27f4 100644
+--- a/catches.js
++++ b/catches.js
+@@ -1,3 +1,40 @@
++/**
++ * @file routes/catches.js
++ * @description 中鱼记录（Catch）管理
++ *
++ * @route GET    /api/catches/:sessionId        获取某场次所有中鱼记录
++ * @route POST   /api/catches                   新增一次中鱼记录
++ *   body: {
++ *     session_id: number,
++ *     angler_id: number,
++ *     position_id: number,
++ *     weight: number,            // 实测重量
++ *     fish_number_in_angler: number,  // 该钓友第几条鱼
++ *     fish_number_overall: number     // 本场全场第几条鱼
++ *   }
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++const tts = require('../tts'); // 语音播报模块
++
++router.get('/:sessionId', /* SELECT * FROM catches WHERE session_id = ? */);
++
++router.post('/', async (req, res, next) => {
++  try {
++    const {
++      session_id, angler_id, position_id,
++      weight, fish_number_in_angler, fish_number_overall
++    } = req.body;
++    // 1) 插入 catches 表
++    // 2) 调用 tts.play(`全场第${fish_number_overall}尾，钓位${position_id}第${fish_number_in_angler}尾，重量${weight}斤`)
++    // 3) 计算净重：net_weight = weight – 6，插入 net_weights 表
++    res.status(201).json({ /* 新记录 */ });
++  } catch(err) { next(err); }
++});
++
++module.exports = router;
++
+ const express = require('express');
+ const router = express.Router();
+ const db = require('./db');
+diff --git a/leaderboards.js b/leaderboards.js
+new file mode 100644
+index 0000000..6b1d3b0
+--- /dev/null
++++ b/leaderboards.js
+@@ -0,0 +1,25 @@
++/**
++ * @file routes/leaderboards.js
++ * @description 排行榜和数据汇总
++ *
++ * @route GET /api/leaderboards/:sessionId/tails       本场次个人尾数排行
++ * @route GET /api/leaderboards/:sessionId/max-weight  本场次最大单尾重排行
++ * @route GET /api/leaderboards/:sessionId/total-weight 本场次累计重量排行
++ *
++ * @route GET /api/leaderboards/summary/daily   单日汇总排行
++ * @route GET /api/leaderboards/summary/weekly  周汇总排行
++ * @route GET /api/leaderboards/summary/monthly 月汇总排行
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++
++router.get('/:sessionId/tails', /* … */);
++router.get('/:sessionId/max-weight', /* … */);
++router.get('/:sessionId/total-weight', /* … */);
++
++router.get('/summary/daily', /* 分组聚合当天数据 */);
++router.get('/summary/weekly', /* 分组聚合周数据 */);
++router.get('/summary/monthly', /* 分组聚合月数据 */);
++
++module.exports = router;
+diff --git a/net_weights.js b/net_weights.js
+new file mode 100644
+index 0000000..f6aa9a5
+--- /dev/null
++++ b/net_weights.js
+@@ -0,0 +1,15 @@
++/**
++ * @file routes/net_weights.js
++ * @description 计算并存储每条鱼的净重
++ *
++ * @route GET    /api/net-weights/:sessionId     获取某场次净重记录
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++
++router.get('/:sessionId', async (req, res, next) => {
++  // SELECT * FROM net_weights WHERE session_id = ?
++});
++
++module.exports = router;
+diff --git a/positions.js b/positions.js
+index 267109d..8685c4c 100644
+--- a/positions.js
++++ b/positions.js
+@@ -1,3 +1,19 @@
++/**
++ * @file routes/positions.js
++ * @description 钓位（Position）管理接口
++ *
++ * @route GET    /api/positions         获取所有钓位及其状态
++ * @route PUT    /api/positions/:id     将钓位标记为“已分配”或“空闲”
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++
++router.get('/', /* SELECT * FROM positions */);
++router.put('/:id', /* UPDATE positions SET is_available=?, assigned_to_session_id=? */);
++
++module.exports = router;
++
+ const express = require('express');
+ const router = express.Router();
+ const db = require('./db');
+diff --git a/sessions.js b/sessions.js
+index ae0dad5..bb8a7ce 100644
+--- a/sessions.js
++++ b/sessions.js
+@@ -1,3 +1,26 @@
++/**
++ * @file routes/sessions.js
++ * @description 比赛场次（Session）管理
++ *
++ * @route GET    /api/sessions             获取所有场次
++ * @route GET    /api/sessions/:id         获取指定场次
++ * @route POST   /api/sessions             新建场次（包括钓友+钓位）
++ *   body: { name, start_time, end_time, anglers: [id,…], positions: [id,…] }
++ * @route PUT    /api/sessions/:id         更新场次信息
++ * @route DELETE /api/sessions/:id         删除场次
++ */
++const express = require('express');
++const router = express.Router();
++const db = require('../db');
++
++router.get('/', /* … */);
++router.get('/:id', /* … */);
++router.post('/', /* 插入 sessions，并批量插入 session_anglers, session_positions */);
++router.put('/:id', /* … */);
++router.delete('/:id', /* … */);
++
++module.exports = router;
++
+ // sessions.js
+ const express = require('express');
+ const router = express.Router();

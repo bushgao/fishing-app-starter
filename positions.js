@@ -1,19 +1,3 @@
-/**
- * @file routes/positions.js
- * @description 钓位（Position）管理接口
- *
- * @route GET    /api/positions         获取所有钓位及其状态
- * @route PUT    /api/positions/:id     将钓位标记为“已分配”或“空闲”
- */
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-
-router.get('/', /* SELECT * FROM positions */);
-router.put('/:id', /* UPDATE positions SET is_available=?, assigned_to_session_id=? */);
-
-module.exports = router;
-
 const express = require('express');
 const router = express.Router();
 const db = require('./db');

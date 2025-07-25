@@ -1,29 +1,3 @@
-/**
- * @file routes/billing.js
- * @description 回鱼计费规则
- *
- * 区间规则：
- *   < 20  => ¥50
- *   20-30 => ¥100
- *   ……
- *
- * @route GET    /api/billing/:sessionId       获取所有回鱼账单
- * @route POST   /api/billing                   根据回鱼净重触发计费并插入
- *   body: { session_id: number, net_weight: number }
- */
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
-
-router.get('/:sessionId', /* … */);
-
-router.post('/', async (req, res, next) => {
-  // 1) 根据 net_weight 选费率
-  // 2) 插入 billing 表 { session_id, net_weight, amount }
-});
-
-module.exports = router;
-
 const express = require('express');
 const router = express.Router();
 const db = require('./db');

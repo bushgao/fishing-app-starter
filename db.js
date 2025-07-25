@@ -41,20 +41,13 @@ function init() {
       caught_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
     db.run(`CREATE TABLE IF NOT EXISTS billing (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  catch_id INTEGER REFERENCES catches(id),
-  net_weight REAL,
-  fee REAL,
-  settled_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)`);
-db.run(`CREATE TABLE IF NOT EXISTS billing (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  catch_id INTEGER REFERENCES catches(id),
-  net_weight REAL,
-  fee REAL,
-  settled_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)`);
   });
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+      catch_id INTEGER REFERENCES catches(id),
+      net_weight REAL,
+      fee REAL,
+      settled_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 }
 
 function all(sql, params, callback) {
